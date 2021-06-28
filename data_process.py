@@ -5,7 +5,7 @@ import datatable
 import pandas as pd
 pd.set_option('display.max_columns', None)
 # %%
-csv = datatable.fread('./data_2/HP_2011_20160701.csv').to_pandas()
+csv = datatable.fread('./data_2/HP_2001_2010.csv').to_pandas()
 csv.head()
 # %%
 def map_fn(x):
@@ -34,11 +34,14 @@ csv['검사결과내용#15_process'] = csv['검사결과내용#15'].map(lambda x
 csv_15 = csv[csv['검사결과내용#15_process'] != '']
 csv_15 = csv_15[csv_15['검사결과내용#15_process'] != 0]
 # %%
-csv_15_bert = pd.read_csv('./data_2/HP_2011_20160701_predict.csv', index_col=0)
-csv_15['result'] = csv_15_bert
-csv_15 = csv_15[csv_15['result'] == 1]
-csv_15
 
+csv_15_bert = pd.read_csv('./data_2/HP_2001_2010_predict.csv', index_col=0)
+if len(csv_15) == len(csv_15_bert):
+    csv_15['result'] = csv_15_bert
+    csv_15 = csv_15[csv_15['result'] == 1]
+else:
+    print('something wrong')
+csv_15
 # %%
 csv['검사결과내용#20'].value_counts()
 # %%
@@ -59,13 +62,25 @@ index = list(set(list(csv_20.index)) | set(list(csv_15.index)) | set(list(csv_24
 data = csv[csv.index.isin(index)]
 data
 # %%
+data.to_csv('./data_2/HP_2001_2010_filterd.csv')
+# %%
 #제외기준 2 위수술이력 문진 == 1
 print(data[data['SURGERY_STOMACH#138'] != 1].value_counts())
 data = data[data['SURGERY_STOMACH#138'] != 1]
 data
 # %%
 #제외기준 3 가족중 위장암존재
-data = data[data['FAMILY_CANCER_STOMACH_F'] != 1]
-data = data[data['FAMILY_CANCER_STOMACH_M'] != 1]
-data = data[data['FAMILY_CANCER_STOMACH_SIB'] != 1]
-data = data[data['FAMILY_CANCER_STOMACH_CH'] != 1]
+data = data[data['FAMILY_CANCER_STOMACH_F#170'] != 1]
+data = data[data['FAMILY_CANCER_STOMACH_M#171'] != 1]
+data = data[data['FAMILY_CANCER_STOMACH_SIB#172'] != 1]
+data = data[data['FAMILY_CANCER_STOMACH_CH#173'] != 1]
+data
+# %%
+data
+# %%
+data = data[~data['처방일자{연령}#4'].isna()]
+data = data[~data['성별#8'].isna()]
+data
+# %%
+print(data['검사결과내용#7'][1])
+# %%
