@@ -8,23 +8,6 @@ pd.set_option('display.max_columns', None)
 csv = datatable.fread('./data_2/HP_20160702_20201231_merged.csv').to_pandas()
 csv.head()
 # %%
-def map_fn(x):
-    if type(x) == str:
-        return x
-    else:
-        return 0
-
-def find_text(x):
-    x = re.sub(r"\s+","", x)
-    p = re.compile('(Result:)')
-    text = x[p.search(x).end():].lower()
-    if text == 'positive':
-        return 1
-    elif text == 'negative':
-        return 0
-    else:
-        return -1
-# %%
 csv['검사결과내용#15'].value_counts()
 # %%
 
