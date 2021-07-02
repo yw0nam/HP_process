@@ -6,7 +6,8 @@ import pandas as pd
 from utils import *
 pd.set_option('display.max_columns', None)
 # %%
-csv = datatable.fread('./data_2/HP_20160702_20201231_merged.csv').to_pandas()
+csv_path = './data_2/HP_2001_2010'
+csv = datatable.fread(csv_path+'.csv').to_pandas()
 
 csv
 
@@ -18,7 +19,7 @@ csv_15 = csv[csv['검사결과내용#15_process'] != '']
 csv_15 = csv_15[csv_15['검사결과내용#15_process'] != 0]
 # %%
 
-csv_15_bert = pd.read_csv('./data_2/HP_20160702_20201231_predict.csv', index_col=0)
+csv_15_bert = pd.read_csv(csv_path+'_predict.csv', index_col=0)
 if len(csv_15) == len(csv_15_bert):
     csv_15['result'] = csv_15_bert
     csv_15 = csv_15[csv_15['result'] == 1]
