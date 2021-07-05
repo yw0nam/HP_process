@@ -8,7 +8,7 @@ def map_fn(x):
     else:
         return 0
 
-def find_text(x):
+def find_positive(x):
     x = re.sub(r"\s+","", x)
     p = re.compile('(Result:)')
     text = x[p.search(x).end():].lower()
@@ -18,6 +18,13 @@ def find_text(x):
         return 0
     else:
         return -1
+    
+def find_text(x, p):
+    res = p.search(x)
+    if res:
+        return 1
+    else:
+        return 0
     
 def find_index(data, p, return_csv=False):
     csv = data.copy()
