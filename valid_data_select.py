@@ -22,7 +22,7 @@ if len(csv_15) == len(bert_pred):
     csv_15_bert = csv_15[csv_15['predict'] == 1]
 else:
     print('something wrong')
-csv_15
+# csv_15
 # %%
 p = re.compile('infection')
 csv_15_infect = csv_15[csv_15['검사결과내용#15'].map(lambda x: find_text(x, p)) != 0]
@@ -31,18 +31,18 @@ csv_15_infect = csv_15[csv_15['검사결과내용#15'].map(lambda x: find_text(x
 csv['검사결과내용#20_process'] = csv['검사결과내용#20'].map(lambda x: map_fn(x))
 csv_20 = csv[csv['검사결과내용#20_process'] != '']
 csv_20 = csv_20[csv_20['검사결과내용#20_process'] != 0]
-csv_20['result'] = csv_20['검사결과내용#20'].map(lambda x: find_text(x))
+csv_20['result'] = csv_20['검사결과내용#20'].map(lambda x: find_positive(x))
 csv_20 = csv_20[csv_20['result'] == 1] # positive -> 1 negative -> 0
-csv_20
+# csv_20
 # %%
 csv_24 = csv[csv['건강검진결과코드#24'] == 'G020']
-csv_24
+# csv_24
 # %%
-
+csv_7 = csv[csv['검사결과내용#7'].map(lambda x: map_fn(x)) != 0]
+csv_7 = csv_7[csv_7['검사결과내용#7'] != '']
+p = re.compile('CLO.*[(]\s*[+]\s*[)]')
+csv_7 = csv_7[csv_7['검사결과내용#7'].map(lambda x: find_text(x, p)) != 0]
+# %%
 # 사용데이터만 추출
-index = list(set(list(csv_20.index)) | set(list(csv_15.index)) | set(list(csv_24.index)) )
+index = list(set(list(csv_20.index)) | set(list(csv_15_infect.index)) | set(list(csv_24.index)) | set(list(csv_7.index)) | set(list(csv_15_bert.index)))
 data = csv[csv.index.isin(index)]
-data
-# %%
-data = data.drop(['C0', '검사결과내용#15_process', '검사결과내용#20_process'], axis='columns')
-data.to_csv('./data_2/HP_20160702_20201231_filterd.csv')
