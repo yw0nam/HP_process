@@ -34,3 +34,9 @@ def find_index(data, p, return_csv=False):
         return csv.index, csv
     else:
         return csv.index
+
+def spilt_date(csv):
+    csv_2001_2010 = csv[(csv['처방일자#3'] >= '2001-01-01') & (csv['처방일자#3'] <= '2010-12-31')]
+    csv_2011_2016_06 = csv[(csv['처방일자#3'] >= '2011-01-01') & (csv['처방일자#3'] <= '2016-07-01')]
+    csv_2016_06_2020 = csv[(csv['처방일자#3'] >= '2016-07-02') & (csv['처방일자#3'] <= '2020-12-31')]
+    return csv_2001_2010, csv_2011_2016_06, csv_2016_06_2020
