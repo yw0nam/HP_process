@@ -46,3 +46,6 @@ csv_7 = csv_7[csv_7['검사결과내용#7'].map(lambda x: find_text(x, p)) != 0]
 # 사용데이터만 추출
 index = list(set(list(csv_20.index)) | set(list(csv_15_infect.index)) | set(list(csv_24.index)) | set(list(csv_7.index)) | set(list(csv_15_bert.index)))
 data = csv[csv.index.isin(index)]
+
+# %%
+data.to_csv('./data/include_criteria.csv')

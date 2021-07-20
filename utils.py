@@ -12,12 +12,18 @@ def find_positive(x):
     x = re.sub(r"\s+","", x)
     p = re.compile('(Result:)')
     text = x[p.search(x).end():].lower()
+    text = re.sub(r"\W", "", text)
     if text == 'positive':
         return 1
     elif text == 'negative':
         return 0
     else:
-        return -1
+        if 'positive' in text:
+            return 1
+        elif 'negative' in text:
+            return 0
+        else:
+            return -1
     
 def find_text(x, p):
     res = p.search(x)
