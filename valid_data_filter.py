@@ -11,6 +11,7 @@ csv = datatable.fread('./data/concated.csv').to_pandas()
 csv = csv.drop('C0', axis=1)
 csv['처방일자#3'] = pd.to_datetime(csv['처방일자#3'])
 csv['처방일자(최초1) #101'] = pd.to_datetime(csv['처방일자(최초1) #101'])
+csv['result'] = csv.apply(lambda x: (x['처방일자(최초1) #101'] - x['처방일자#3']).days, axis=1)
 csv['result'].dropna()
 csv_fu = csv[csv['result'] >= 365]
 del csv
@@ -58,3 +59,4 @@ data = data[~data.index.isin(index)]
 # Apply follow up criteria
 data = data[data.index.isin(csv_fu.index)]
 data.to_csv('./data/apply_exclusion.csv')
+# %%
