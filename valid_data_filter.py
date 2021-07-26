@@ -5,6 +5,15 @@ import datatable
 import pandas as pd
 from utils import *
 pd.set_option('display.max_columns', None)
+# %% [markdown]
+# # Follow up indexes
+csv = datatable.fread('./data/concated.csv').to_pandas()
+csv = csv.drop('C0', axis=1)
+csv['처방일자#3'] = pd.to_datetime(csv['처방일자#3'])
+csv['처방일자(최초1) #101'] = pd.to_datetime(csv['처방일자(최초1) #101'])
+csv['result'].dropna()
+csv_fu = csv[csv['result'] >= 365]
+del csv
 # %%
 data = pd.read_csv('./data/include_criteria.csv', index_col=0)
 data = data.drop('검사결과내용#20_process', axis='columns')
@@ -45,30 +54,7 @@ index = list(set(list(csv_not_age_or_sex.index)) |
              set(list(csv_surgery_stomach.index))
              )
 data = data[~data.index.isin(index)]
-# %%
-fp_list = data['환자번호#1'].value_counts() >= 2
-fp_list = list(fp_list[fp_list == True].index)
-
-data_fp = data[data['환자번호#1'].isin(fp_list)]
-data_fp = data_fp.sort_values(by=['처방일자#3'], axis=0, ascending=False)
-data_fp['처방일자#3'] = pd.to_datetime(data_fp['처방일자#3'])
-
 # %% [markdown]
-# 최종검사수 5079개
-# 환자수 2441명
-valid_patient_code = []
-
-for code in fp_list:
-    prescribe_date = list(data_fp[data_fp['환자번호#1'] == code]['처방일자#3'])
-    prev_date = prescribe_date[0]
-    for date in prescribe_date[1:]:
-        day = (prev_date - date).days >= 365
-        if day:
-            valid_patient_code.append(code)
-            break
-        else:
-            prev_date = date
-            
-include_data = data_fp[data_fp['환자번호#1'].isin(valid_patient_code)]
-include_data.to_csv('./data/apply_exclusion.csv')
-# %%
+# Apply follow up criteria
+data = data[data.index.isin(csv_fu.index)]
+data.to_csv('./data/apply_exclusion.csv')
