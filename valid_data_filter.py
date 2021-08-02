@@ -9,11 +9,19 @@ pd.set_option('display.max_columns', None)
 # # Follow up indexes
 csv = datatable.fread('./data/concated.csv').to_pandas()
 csv = csv.drop('C0', axis=1)
+
 csv['처방일자#3'] = pd.to_datetime(csv['처방일자#3'])
 csv['처방일자(최초1) #101'] = pd.to_datetime(csv['처방일자(최초1) #101'])
-csv['result'] = csv.apply(lambda x: (x['처방일자(최초1) #101'] - x['처방일자#3']).days, axis=1)
-csv['result'].dropna()
-csv_fu = csv[csv['result'] >= 365]
+csv['처방일자(최초1) #107'] = pd.to_datetime(csv['처방일자(최초1) #107'])
+csv['처방일자(최초1) #113'] = pd.to_datetime(csv['처방일자(최초1) #113'])
+
+csv['result_1'] = csv.apply(lambda x: (x['처방일자(최초1) #101'] - x['처방일자#3']).days, axis=1)
+csv['result_2'] = csv.apply(lambda x: (x['처방일자(최초1) #107'] - x['처방일자#3']).days, axis=1)
+csv['result_3'] = csv.apply(lambda x: (x['처방일자(최초1) #113'] - x['처방일자#3']).days, axis=1)
+csv_fu_1 = csv[csv['result_1'] >= 365]
+csv_fu_2 = csv[csv['result_2'] >= 365]
+csv_fu_3 = csv[csv['result_3'] >= 365]
+csv_fu_idx = list(csv_fu_1.index) + list(csv_fu_2) + list(csv_fu_3)
 del csv
 # %%
 data = pd.read_csv('./data/include_criteria.csv', index_col=0)
@@ -57,6 +65,6 @@ index = list(set(list(csv_not_age_or_sex.index)) |
 data = data[~data.index.isin(index)]
 # %% [markdown]
 # Apply follow up criteria
-data = data[data.index.isin(csv_fu.index)]
+data = data[data.index.isin(csv_fu_idx)]
 data.to_csv('./data/apply_exclusion.csv')
 # %%
