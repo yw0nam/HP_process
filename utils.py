@@ -26,7 +26,7 @@ def find_positive(x):
             return -1
     
 def find_text(x, p):
-    res = p.search(x.lower())
+    res = p.search(x)
     if res:
         return 1
     else:

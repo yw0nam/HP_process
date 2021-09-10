@@ -28,11 +28,11 @@ csv = pd.read_csv('./data/apply_exclusion.csv', index_col=0)
 csv = csv.drop_duplicates('환자번호#1')
 
 # %%
-data = csv[csv['검사결과내용#15'] != '']
-data = data[data['검사결과내용#15'].map(lambda x: map_fn(x)) != 0]
+data = csv[csv['검사결과내용(최초1) #110'] != '']
+data = data[data['검사결과내용(최초1) #110'].map(lambda x: map_fn(x)) != 0]
 # %%
 p = re.compile('[-=#)(:]')
-data['processed_text'] = data['검사결과내용#15'].map(lambda x: re.sub(p, '', x[1:]))
+data['processed_text'] = data['검사결과내용(최초1) #110'].map(lambda x: re.sub(p, '', x[1:]))
 # %%
 bert_model_name = 'experts_wiki_books' 
 map_name_to_handle = {
@@ -86,5 +86,5 @@ temp = np.where(temp < 0.5, 0, 1)
 # %%
 data['result'] = temp
 # %%
-data['result'].to_csv('./data/bert_predict.csv')
+data['result'].to_csv('./data/analysis_bert_predict.csv')
 # %%
