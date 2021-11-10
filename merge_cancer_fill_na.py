@@ -23,3 +23,8 @@ csv = csv.drop_duplicates(subset='환자번호')
 
 csv.to_csv('./data_for_analysis/any_bx_2021_10_25.csv', index=False)
 # %%
+import pandas as pd
+# %%
+csv = pd.read_csv('./data_for_analysis/hp_bx_2021_10_25.csv')
+csv.to_excel('./data_for_analysis/hp_bx_cancer.xlsx', index=False)
+# %%

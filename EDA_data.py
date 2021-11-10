@@ -3,16 +3,17 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from utils import cal_percent_group
+import seaborn as sns
 pd.set_option('display.max_columns', None)
 
 # %%
-bx_for_hp = pd.read_csv("./data_for_analysis/hp_bx_2021_10_25.csv", 
+bx_for_hp = pd.read_csv("./data_for_analysis/hp_bx.fu365.fu_cdw.csv", 
                         na_values=np.nan, index_col=0)
 bx_for_hp['사망여부'] = bx_for_hp['사망여부'].fillna('N')
 print('데이터 N수:',len(bx_for_hp))
 pd.DataFrame(bx_for_hp.isna().sum()['age':], columns=['Missing Count'])
 # %%
-any_csv = pd.read_csv("./data_for_analysis/any_bx_2021_10_25.csv", na_values=np.nan)
+any_csv = pd.read_csv("./data_for_analysis/any_bx.fu365.fu_cdw.csv", na_values=np.nan)
 any_csv['사망여부'] = any_csv['사망여부'].fillna('N')
 print('데이터 N수:',len(any_csv))
 pd.DataFrame(any_csv.isna().sum()['age':], columns=['Missing Count'])
@@ -39,4 +40,45 @@ cancer_percent.columns = ['data_bx_hp', 'data_any_bx']
 plt.figure();
 cancer_percent.plot.barh()
 plt.gca().set(title='cancer percentage each group', xlabel='percentage(%)')
+# %%
+
+fig = plt.figure(figsize=(20, 5))
+sns.set_style('dark')
+area1 = fig.add_subplot(1, 4, 1)
+area1.set_title('Group 1 follow up lengths')
+area2 = fig.add_subplot(1, 4, 2)
+area2.set_title('Group 2 follow up lengths')
+area3 = fig.add_subplot(1, 4, 3)
+area3.set_title('Group 3 follow up lengths')
+area4 = fig.add_subplot(1, 4, 4)
+area4.set_title('Group 4 follow up lengths')
+sns.histplot(bx_for_hp.query('group == 1')['fu_days'], ax=area1)
+sns.histplot(bx_for_hp.query('group == 2')['fu_days'], ax=area2)
+sns.histplot(bx_for_hp.query('group == 3')['fu_days'], ax=area3)
+sns.histplot(bx_for_hp.query('group == 4')['fu_days'], ax=area4)
+plt.show()
+# %%
+fig = plt.figure(figsize=(20, 5))
+sns.set_style('dark')
+area1 = fig.add_subplot(1, 4, 1)
+area1.set_title('Group 1 follow up lengths')
+area2 = fig.add_subplot(1, 4, 2)
+area2.set_title('Group 2 follow up lengths')
+area3 = fig.add_subplot(1, 4, 3)
+area3.set_title('Group 3 follow up lengths')
+area4 = fig.add_subplot(1, 4, 4)
+area4.set_title('Group 4 follow up lengths')
+sns.histplot(any_csv.query('group == 1')['fu_days'], ax=area1)
+sns.histplot(any_csv.query('group == 2')['fu_days'], ax=area2)
+sns.histplot(any_csv.query('group == 3')['fu_days'], ax=area3)
+sns.histplot(any_csv.query('group == 4')['fu_days'], ax=area4)
+plt.show()
+# %%
+
+any_csv.query('last_fu != first_fu')['group'].value_counts()
+# %%
+bx_for_hp.query('last_fu != first_fu')['group'].value_counts()
+# %%
+# Exposure time 
+
 # %%
