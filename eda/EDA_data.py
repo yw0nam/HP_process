@@ -74,11 +74,12 @@ sns.histplot(any_csv.query('group == 3')['fu_days'], ax=area3)
 sns.histplot(any_csv.query('group == 4')['fu_days'], ax=area4)
 plt.show()
 # %%
-
-any_csv.query('last_fu != first_fu')['group'].value_counts()
+bx_for_hp['처방일자'] = pd.to_datetime(bx_for_hp['처방일자'])
+bx_for_hp['first_fu'] = pd.to_datetime(bx_for_hp['first_fu'])
+bx_for_hp['last_fu'] = pd.to_datetime(bx_for_hp['last_fu'])
+bx_for_hp_fu_3 = bx_for_hp.query('last_fu != first_fu')
 # %%
-bx_for_hp.query('last_fu != first_fu')['group'].value_counts()
+bx_for_hp_fu_3['fu_days_2'] = (bx_for_hp_fu_3['last_fu'] -bx_for_hp_fu_3['first_fu']).map(lambda x:x.days)
 # %%
-# Exposure time 
-
+bx_for_hp_fu_3.query('fu_days_2 >= 365')['fu_days_2'].hist()
 # %%

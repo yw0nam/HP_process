@@ -21,47 +21,53 @@ class csv_parser:
         self.csv = pd.merge(self.csv, cancer[['CDW_ID', 'ORDR_YMD']], how='left', 
                             left_on=['환자번호'], right_on=['CDW_ID'])
         self.csv['ORDR_YMD'] = pd.to_datetime(self.csv['ORDR_YMD'])
-        self.csv = self.csv.assign(cancer_risk = self.csv.apply(lambda x: self.check_day_is_avaliable(x['처방일자'], 
-                                                                                                      x['ORDR_YMD']), axis='columns'))
-        self.csv = self.csv.drop(['CDW_ID', 'ORDR_YMD'], axis='columns')
+        # self.csv = self.csv.assign(cancer_risk = self.csv.apply(lambda x: self.check_day_is_avaliable(x['처방일자'], 
+        #                                                                                               x['ORDR_YMD']), axis='columns'))
+        self.csv = self.csv.drop(['CDW_ID'], axis='columns')
+        self.csv = self.csv.rename({'ORDR_YMD':'cancer_date_risk'}, axis=1)
         
     def cancer_bx_check(self, path):
         cancer = pd.read_csv(path, encoding='CP949', index_col=0)
         self.csv = pd.merge(self.csv, cancer[['환자번호#1', '처방일자#2']], how='left', 
                        left_on=['환자번호'], right_on=['환자번호#1'])
         self.csv['처방일자#2'] = pd.to_datetime(self.csv['처방일자#2'])
-        self.csv = self.csv.assign(cancer_bx = self.csv.apply(lambda x: self.check_day_is_avaliable(x['처방일자'], 
-                                                                                               x['처방일자#2']), axis='columns'))
-        self.csv = self.csv.drop(['환자번호#1', '처방일자#2'], axis='columns')
+        # self.csv = self.csv.assign(cancer_bx = self.csv.apply(lambda x: self.check_day_is_avaliable(x['처방일자'], 
+        #                                                                                        x['처방일자#2']), axis='columns'))
+        self.csv = self.csv.drop(['환자번호#1'], axis='columns')
+        self.csv = self.csv.rename({'처방일자#2':'cancer_date_bx'}, axis=1)
         
     def cancer_histology_check(self, path):
-        orig_csv = pd.read_csv(path, index_col=0)
+        orig_csv = pd.read_csv(path)
         orig_csv = orig_csv[~orig_csv['본원진단일자(최초1) #118'].isna()]
         orig_csv['최초진단일자(최초1) #119'] = pd.to_datetime(orig_csv['최초진단일자(최초1) #119'])
         self.csv = pd.merge(self.csv,  orig_csv[['환자번호#1', '최초진단일자(최초1) #119']], how='left', 
                  left_on=['환자번호'], right_on=['환자번호#1'])
-        self.csv = self.csv.assign(cancer_histology = self.csv.apply(lambda x: self.check_day_is_avaliable(x['처방일자'],
-                                                                                                      x['최초진단일자(최초1) #119']), axis='columns'))
-        self.csv = self.csv.drop(['환자번호#1', '최초진단일자(최초1) #119'], axis='columns')
+        # self.csv = self.csv.assign(cancer_histology = self.csv.apply(lambda x: self.check_day_is_avaliable(x['처방일자'],
+        #                                                                                               x['최초진단일자(최초1) #119']), axis='columns'))
+        self.csv = self.csv.drop(['환자번호#1'], axis='columns')
+        self.csv = self.csv.rename({'최초진단일자(최초1) #119':'cancer_date_histology'}, 
+                                   axis=1)
     
     def check_cancer(self, risk_path, bx_path, histology_path):
         self.cancer_histology_check(histology_path)
         self.cancer_bx_check(bx_path)
         self.cancer_risk_check(risk_path)
-        csv = self.csv.assign(cancer = (self.csv['cancer_risk'] == 1) | 
-                                           (self.csv['cancer_bx'] == 1 )| 
-                                           (self.csv['cancer_histology'] == 1))
-        csv['cancer'] = csv['cancer'].replace({True: 1, False: 0})
-        return csv
+        # csv = self.csv.assign(cancer = (self.csv['cancer_risk'] == 1) | 
+        #                                    (self.csv['cancer_bx'] == 1 )| 
+        #                                    (self.csv['cancer_histology'] == 1))
+        # csv['cancer'] = csv['cancer'].replace({True: 1, False: 0})
+        
+        self.csv['cancer_date'] = self.csv['cancer_date_bx'].fillna(self.csv['cancer_date_risk']).fillna(self.csv['cancer_date_histology'])
+        return self.csv
     
-    def check_day_is_avaliable(self, day_1, day_2):
-        try:
-            if (day_2 - day_1).days >= 0:
-                return 1
-            else:
-                return 0
-        except AttributeError:
-            return 0
+    # def check_day_is_avaliable(self, day_1, day_2):
+    #     try:
+    #         if (day_2 - day_1).days >= 0:
+    #             return 1
+    #         else:
+    #             return 0
+    #     except AttributeError:
+    #         return 0
         
 def fill_bmi(csv, bmi_csv_path):
     bmi_csv = pd.read_csv(bmi_csv_path, index_col=0, encoding='CP949')

@@ -1,4 +1,5 @@
 # %%
+from tqdm import tqdm
 from utils import *
 # from elasticsearch import Elasticsearch, helpers
 import pandas as pd
@@ -7,8 +8,8 @@ import re
 pd.set_option('display.max_columns', None)
 
 # %%
-csv = pd.read_csv('./data/apply_exclusion.csv', index_col=0)
-csv = csv.drop_duplicates('환자번호#1')
+csv = pd.read_csv('./data/apply_exclusion.csv')
+# csv = csv.drop_duplicates('환자번호#1')
 bert_predict = pd.read_csv('./data/analysis_bert_predict.csv', index_col=0)
 csv_bert = csv.query('index in @bert_predict.index')
 csv_date = csv.copy()
@@ -16,10 +17,17 @@ eradication_csv_1 = pd.read_csv("./data/HP_drug_1_unlock.csv",
                               index_col=0, encoding='CP949')
 eradication_csv_2 = pd.read_csv("./data/HP_drug_2_unlock.csv", 
                               index_col=0, encoding='CP949')
-# %% [markdown]
-## Group 1 After Eradication (-)
-ids = "IDs that can't be downloaded at CDW"
-ids = list(set(eradication_csv_1['환자번호#1'].to_list()  + eradication_csv_2['환자번호#1'].to_list())) #+ ids.split()))
+# %%
+ids = """9AC558D65B79
+04BDCD741155
+1AFB512C82A3
+3022C503FFF5
+3FEBB3B96B55
+A0B832BFF72D
+C1D75C2111A9
+E4FF02C660DF
+F7A27A7295ED"""
+ids = list(set(eradication_csv_1['환자번호#1'].to_list()  + eradication_csv_2['환자번호#1'].to_list())) + ids.split()
 index_eradication = list(csv[csv['환자번호#1'].isin(ids)].index)
 
 index_160 = list(csv[csv['TRT_HELICO_PYLORI#160'] == 1].index)
@@ -68,7 +76,7 @@ csv_date['Group_1_DF'] = csv_ubt_df_1['처방일자(최초1) #107']
 
 group_1 = list(set(list(csv_ubt_1.index) + list(csv_ubt_df_1.index)+ list(csv_cz_1.index)))
 
-# %% [markdown]
+# %% 
 ## Group 2 After Eradication (+)
 temp = data_1.copy()
 temp = temp[temp['검사결과내용(최초1) #104'].map(lambda x: map_fn(x)) != 0]
@@ -106,7 +114,7 @@ csv_date['Group_2_CZ'] = csv_clo_2['처방일자(최초1) #101']
 csv_date['Group_2_DF'] = csv_cz_2['처방일자(최초1) #107']
 group_2 = list(set(list(csv_ubt_2.index) + list(csv_clo_2.index)+ list(csv_cz_2.index)))
 
-# %% [markdown]
+# %% 
 ## Group 3 Not Eradication (+)
 data_3 = csv.query('index not in @index')
 temp = data_3[data_3['검사결과내용(최초1) #104'] != '']
@@ -144,7 +152,7 @@ csv_date['Group_3_DL'] = csv_ubt_3['처방일자(최초1) #113']
 csv_date['Group_3_CZ'] = csv_clo_3['처방일자(최초1) #101']
 csv_date['Group_3_DF'] = csv_cz_3['처방일자(최초1) #107']
 group_3 = list(set(list(csv_ubt_3.index) + list(csv_clo_3.index)+ list(csv_cz_3.index)))
-# %% [markdown]
+# %%
 ## Group 4 Not Eradication (-)
 temp = data_3[data_3['검사결과내용(최초1) #110'].map(lambda x: map_fn(x) != 0)]
 
@@ -182,7 +190,7 @@ group_4 = list(set(list(csv_ubt_4.index) + list(csv_clo_4.index)+ list(csv_cz_4.
 # %%
 cols = list(csv_date.columns[173:])
 valid_ls = []
-for i in range(len(csv_date)):
+for i in tqdm(range(len(csv_date))):
     flag = 1
     for col in cols:
         if type(csv_date.iloc[i][col]) == str:
@@ -206,7 +214,7 @@ first_fu = []
 last_fu_name = []
 first_fu_name = []
 
-for i in range(len(valid_data)):
+for i in tqdm(range(len(valid_data))):
     col_name = []
     dates = []
     for col in cols:
@@ -237,14 +245,12 @@ group_3_df['group'] = 3
 group_4_df['group'] = 4
 
 valid_data = pd.concat([group_1_df, group_2_df, group_3_df, group_4_df])
-
-col = csv.columns[173:-6]
-a, b = list(col[:3]), list(col[9:])
-col_ls = a + b
-
+# %%
+col_ls = group_1_col + group_4_col
+# %%
 first_fu = []
 first_fu_name = []
-for i in range(len(valid_data)):
+for i in tqdm(range(len(valid_data))):
     col_name = []
     dates = []
     for col in col_ls:
@@ -262,6 +268,23 @@ for i in range(len(valid_data)):
 
 valid_data['first_negative_date'] = first_fu
 valid_data['first_negative_name'] = first_fu_name
+
 # %%
-valid_data.to_excel('./data/grouping_data_any_bx.xlsx', index=False)
-valid_data.to_csv('./data/grouping_data_any_bx.csv', index=False)
+fu_date_list = []
+fu_name_list = []
+for i in tqdm(range(len(valid_data))):
+    col_name = []
+    dates = []
+    for col in cols:
+        if type(valid_data.iloc[i][col]) == str:
+            dates.append(valid_data.iloc[i][col])
+            col_name.append(col)
+    fu_date_list.append('|'.join(dates))
+    fu_name_list.append('|'.join(col_name))
+
+valid_data['fu_dates'] = fu_date_list
+valid_data['fu_names'] = fu_name_list
+# %%
+valid_data.to_csv('./data_for_analysis/any_bx.csv', index=False)
+
+# %%

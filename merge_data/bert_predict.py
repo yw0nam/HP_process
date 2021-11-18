@@ -24,7 +24,7 @@ if gpus:
     tf.config.experimental.set_visible_devices(gpus[0], 'GPU')
     tf.config.experimental.set_memory_growth(gpus[0], True)
 # %%
-csv = pd.read_csv('./data/apply_exclusion.csv', index_col=0)
+csv = pd.read_csv('./data/apply_exclusion.csv')
 csv = csv.drop_duplicates('환자번호#1')
 
 # %%

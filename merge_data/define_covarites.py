@@ -5,7 +5,7 @@ import re
 pd.set_option('display.max_columns', None)
 
 # %%
-csv = pd.read_csv('./data/grouping_data.csv')
+csv = pd.read_csv('./data_for_analysis/bx_for_hp.csv')
 valid = csv[csv['valid'] == 1]
 # %%
 csv = valid[['환자번호#1', '처방일자#3']]
@@ -113,6 +113,7 @@ def map_fn(x):
     return 'WNL'
 csv['EGD'] = valid['검사결과내용#7'].map(lambda x: map_fn(x.lower()))
 # %%
+
 def map_fn(x):
     find_txts = ['adeno\w+\shig\w+\sgra\w+\sdyspla\w+\s', 'adeno\w+\s']
     names = [2, 1]
@@ -127,12 +128,42 @@ def map_fn(x):
     return 0
 csv['Adenoma'] = valid['검사결과내용#15'].map(lambda x: map_fn(x))
 # %%
-death = pd.read_csv('./data/die.csv', index_col=0)
-csv_add_death = pd.merge(csv, death, how='left', 
-                left_on=['환자번호'], 
-                right_on=['환자번호'])
-cols = list(valid.columns[-7:])
-data = pd.concat([csv_add_death, valid[cols]], axis=1)
+cdw_df = pd.read_excel('./data/건진 사망자 데이터 확인.xlsx', sheet_name='CDW건진이력기준')
+hab_df = pd.read_excel('./data/건진 사망자 데이터 확인.xlsx', sheet_name='행안부데이터기준')
 
-data.to_csv('./data_for_analysis/hp_bx.csv')
-data.to_excel('./data_for_analysis/hp_bx.xlsx')
+cdw_df_filtered = cdw_df[['환자번호#1', '사망일자#20', '사망여부#19','사망원인코드#22', '사망원인명#23']]
+hab_df_filtered = hab_df[['환자번호#1','사망일#2', '사망여부#11', '사망원인코드#14', '사망원인명#15']]
+
+cdw_df_filtered.columns = ['환자번호', '사망일', '사망여부_', '사망원인코드_', '사망원인명_']
+hab_df_filtered.columns = ['환자번호', '사망일', '사망여부_', '사망원인코드_', '사망원인명_']
+
+hab_df_filtered = hab_df_filtered.query("사망여부_ == 'Y'")
+
+death = pd.concat([cdw_df_filtered, hab_df_filtered], axis=0, ignore_index=True)
+death = death.drop_duplicates(subset=['환자번호'])
+
+die = pd.read_csv('./data/apply_exclusion.csv')
+die['사망여부'] = die['사망일#10'].map(lambda x: 'Y' if type(x) != float else 'N')
+die = die[['환자번호#1', '사망일#10', '사망여부']]
+die = die[die['사망여부'] == 'Y']
+die.columns = ['환자번호', '사망일', '사망여부_']
+
+die = pd.concat([death, die])
+die.columns = ['환자번호', '사망일', '사망여부', '사망원인코드', '사망원인명']
+# %%
+
+csv = pd.merge(csv, die, how='left',
+        left_on=['환자번호'], right_on=['환자번호'])
+csv = csv.drop_duplicates(subset='환자번호')
+# %%
+cols = list(valid.columns[-9:]) + ['환자번호#1']
+data = pd.merge(csv, valid[cols], how='left',
+                left_on=['환자번호'], right_on=['환자번호#1'])
+# %%
+data = data.drop(['환자번호#1'], axis=1)
+# %%
+data.to_csv('./data_for_analysis/bx_for_hp.cov.csv', index=False)
+# %%
+
+pd.read_csv('./data_for_analysis/bx_for_hp.cov.csv')
+# %%
