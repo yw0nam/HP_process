@@ -21,5 +21,3 @@ csv = csv.drop_duplicates(subset='환자번호')
 
 # %%
 csv.to_csv('../data_for_analysis/any_bx.cov.fillna_cancer.csv', index=False)
-
-# %%

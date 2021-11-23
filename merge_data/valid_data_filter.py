@@ -6,12 +6,18 @@ import pandas as pd
 from utils import *
 pd.set_option('display.max_columns', None)
 # %%
-data = pd.read_csv('./data/include_criteria.csv', index_col=0)
+data = pd.read_csv('../data/include_criteria.csv', index_col=0)
 data = data.drop('검사결과내용#20_process', axis='columns')
+data = data[data['처방일자{연령}#4'] >= 18]
+data = data.drop_duplicates(subset='환자번호#1')
+# %%
+data = data[data['처방일자#3'] < '2019-12-30']
+
 # 총 검사수 41745개
 # %%
 # # 제외기준 2 위수술이력 문진 == 1 -> 검사수 123개
 csv_surgery_stomach = data[data['SURGERY_STOMACH#138'] == 1]
+print(len(csv_surgery_stomach))
 
 # %% 
 # # 내시경 STG, TG 포함일 경우 -> 텍스트 검출로 확인 -> 검사수 76개
@@ -23,13 +29,14 @@ csv_endoscopy = csv_endoscopy[csv_endoscopy['검사결과내용#7_process'] != 0
 p = re.compile('gastrectomy')
 idx = find_index(csv_endoscopy, p)
 csv_endoscopy = data[data.index.isin(idx)]
+print(len(csv_endoscopy))
 # %%
 # # 제외기준 3 가족중 위장암존재 -> 검사수 4031개
 csv_family_cancer = data[(data['FAMILY_CANCER_STOMACH_F#170'] == 1) | 
               (data['FAMILY_CANCER_STOMACH_M#171'] == 1) |
               (data['FAMILY_CANCER_STOMACH_SIB#172'] == 1) |
               (data['FAMILY_CANCER_STOMACH_CH#173'] == 1)]
-
+print(len(csv_family_cancer))
 # %%
 # # 제외기준 4 성별, 연령 없는경우 -> 검사수 0개
 csv_not_age_or_sex = data[(data['처방일자{연령}#4'].isna()) | 
@@ -43,6 +50,7 @@ index = list(set(list(csv_not_age_or_sex.index)) |
              set(list(csv_surgery_stomach.index))
              )
 data = data[~data.index.isin(index)]
+
 # %%
 # Apply follow up criteria
 # csv = data.copy()
@@ -62,7 +70,5 @@ data = data[~data.index.isin(index)]
 data = data.drop_duplicates(subset='환자번호#1')
 
 # %%
-
-data.to_csv('./data/apply_exclusion.csv', index=False)
-
+data.to_csv('../data/apply_exclusion.csv', index=False)
 # %%

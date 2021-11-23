@@ -8,14 +8,14 @@ import re
 pd.set_option('display.max_columns', None)
 
 # %%
-csv = pd.read_csv('./data/apply_exclusion.csv')
+csv = pd.read_csv('../data/apply_exclusion.csv')
 # csv = csv.drop_duplicates('환자번호#1')
-bert_predict = pd.read_csv('./data/analysis_bert_predict.csv', index_col=0)
+bert_predict = pd.read_csv('../data/analysis_bert_predict.csv', index_col=0)
 csv_bert = csv.query('index in @bert_predict.index')
 csv_date = csv.copy()
-eradication_csv_1 = pd.read_csv("./data/HP_drug_1_unlock.csv", 
+eradication_csv_1 = pd.read_csv("../data/HP_drug_1_unlock.csv", 
                               index_col=0, encoding='CP949')
-eradication_csv_2 = pd.read_csv("./data/HP_drug_2_unlock.csv", 
+eradication_csv_2 = pd.read_csv("../data/HP_drug_2_unlock.csv", 
                               index_col=0, encoding='CP949')
 # %%
 ids = """9AC558D65B79
@@ -285,6 +285,6 @@ for i in tqdm(range(len(valid_data))):
 valid_data['fu_dates'] = fu_date_list
 valid_data['fu_names'] = fu_name_list
 # %%
-valid_data.to_csv('./data_for_analysis/any_bx.csv', index=False)
+valid_data.to_csv('../data_for_analysis/any_bx.csv', index=False)
 
 # %%

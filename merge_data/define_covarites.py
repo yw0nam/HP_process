@@ -3,9 +3,8 @@ import pandas as pd
 import numpy as np
 import re
 pd.set_option('display.max_columns', None)
-
 # %%
-csv = pd.read_csv('./data_for_analysis/bx_for_hp.csv')
+csv = pd.read_csv('../data_for_analysis/any_bx.csv')
 valid = csv[csv['valid'] == 1]
 # %%
 csv = valid[['환자번호#1', '처방일자#3']]
@@ -128,8 +127,8 @@ def map_fn(x):
     return 0
 csv['Adenoma'] = valid['검사결과내용#15'].map(lambda x: map_fn(x))
 # %%
-cdw_df = pd.read_excel('./data/건진 사망자 데이터 확인.xlsx', sheet_name='CDW건진이력기준')
-hab_df = pd.read_excel('./data/건진 사망자 데이터 확인.xlsx', sheet_name='행안부데이터기준')
+cdw_df = pd.read_excel('../data/건진 사망자 데이터 확인.xlsx', sheet_name='CDW건진이력기준')
+hab_df = pd.read_excel('../data/건진 사망자 데이터 확인.xlsx', sheet_name='행안부데이터기준')
 
 cdw_df_filtered = cdw_df[['환자번호#1', '사망일자#20', '사망여부#19','사망원인코드#22', '사망원인명#23']]
 hab_df_filtered = hab_df[['환자번호#1','사망일#2', '사망여부#11', '사망원인코드#14', '사망원인명#15']]
@@ -142,7 +141,7 @@ hab_df_filtered = hab_df_filtered.query("사망여부_ == 'Y'")
 death = pd.concat([cdw_df_filtered, hab_df_filtered], axis=0, ignore_index=True)
 death = death.drop_duplicates(subset=['환자번호'])
 
-die = pd.read_csv('./data/apply_exclusion.csv')
+die = pd.read_csv('../data/apply_exclusion.csv')
 die['사망여부'] = die['사망일#10'].map(lambda x: 'Y' if type(x) != float else 'N')
 die = die[['환자번호#1', '사망일#10', '사망여부']]
 die = die[die['사망여부'] == 'Y']
@@ -162,8 +161,4 @@ data = pd.merge(csv, valid[cols], how='left',
 # %%
 data = data.drop(['환자번호#1'], axis=1)
 # %%
-data.to_csv('./data_for_analysis/bx_for_hp.cov.csv', index=False)
-# %%
-
-pd.read_csv('./data_for_analysis/bx_for_hp.cov.csv')
-# %%
+data.to_csv('../data_for_analysis/any_bx.cov.csv', index=False)
