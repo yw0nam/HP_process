@@ -45,37 +45,45 @@ csv['cancer_fu'] = csv.apply(lambda x: None if x['cancer'] == 'Y' and x['cancer_
 csv['cancer_fu_date'] = csv['cancer_date'].fillna(csv['final_fu_death']).map(lambda x: '2021-10-12' if x >= '2021-10-12' else x)
 
 # %%
+csv = csv.query('fu_1to2 <= 1895')
+csv['cancer_fu_date'] = csv.apply(lambda x: '2021-10-12' if x['cancer_fu'] != 'Y' else x['cancer_fu_date'], axis=1)
+csv['final_fu_death'] = csv.apply(lambda x: '2021-10-12' if x['사망여부'] != 'Y' else x['final_fu_death'], axis=1)
 csv['cancer_fu_date'] = pd.to_datetime(csv['cancer_fu_date'])
 csv['final_fu_death'] = pd.to_datetime(csv['final_fu_death'])
-# %%
-csv = csv.query('fu_1to2 <= 1895')
-# %%
-def check_cancer_or_death(fu, fu_date, index_date):
-    """
+# # %%
+# def check_cancer_or_death(fu, fu_date, index_date):
+#     """
 
-    Args:
-        fu ([column]): Column that cancer or death
-        fu_date ([column]): Column that cancer or death date
-        index_date ([column]): Column that has index date.
+#     Args:
+#         fu ([column]): Column that cancer or death
+#         fu_date ([column]): Column that cancer or death date
+#         index_date ([column]): Column that has index date.
 
-    """
-    if fu != 'Y':
-        return None
-    else:
-        if (fu_date - index_date).days > 0 :
-            return 'Y'
-        else:
-            return 'N'
+#     """
+#     if fu != 'Y':
+#         return None
+#     else:
+#         if (fu_date - index_date).days > 0 :
+#             return 'Y'
+#         else:
+#             return 'N'
+# # %%
+# # %%
+# print(len(csv) - len(csv[csv.apply(lambda x: check_cancer_or_death(x['cancer_fu'],
+#                                               x['cancer_fu_date'], x['index_date']), axis=1) != 'N']))
+# print(len(csv) - len(csv[csv.apply(lambda x: check_cancer_or_death(x['사망여부'],
+#                                               x['final_fu_death'], x['index_date']), axis=1) != 'N']))
+# csv = csv[csv.apply(lambda x: check_cancer_or_death(x['cancer_fu'],
+#                                               x['cancer_fu_date'],x['index_date']), axis=1) != 'N']
+# csv = csv[csv.apply(lambda x: check_cancer_or_death(x['사망여부'],
+#                                               x['final_fu_death'],x['index_date']), axis=1) != 'N']
 # %%
-print(len(csv) - len(csv[csv.apply(lambda x: check_cancer_or_death(x['cancer_fu'],
-                                              x['cancer_fu_date'], x['index_date']), axis=1) != 'N']))
-print(len(csv) - len(csv[csv.apply(lambda x: check_cancer_or_death(x['사망여부'],
-                                              x['final_fu_death'], x['index_date']), axis=1) != 'N']))
+print(len(csv[(csv['cancer_fu_date'] - csv['index_date']).map(lambda x: x.days) <= 0]))
+print(len(csv[(csv['final_fu_death'] - csv['index_date']).map(lambda x: x.days) <= 0]))
 # %%
-csv = csv[csv.apply(lambda x: check_cancer_or_death(x['cancer_fu'],
-                                              x['cancer_fu_date'],x['처방일자']), axis=1) != 'N']
-csv = csv[csv.apply(lambda x: check_cancer_or_death(x['사망여부'],
-                                              x['final_fu_death'],x['처방일자']), axis=1) != 'N']
+# %%
+csv = csv[(csv['final_fu_death'] - csv['index_date']).map(lambda x: x.days) > 0]
+csv = csv[(csv['cancer_fu_date'] - csv['index_date']).map(lambda x: x.days) > 0]
 # %%
 csv = csv.rename({'BZ':'HDL'}, axis=1) 
 csv['사망여부'] =csv['사망여부'].fillna('N')
