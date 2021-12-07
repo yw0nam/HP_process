@@ -41,4 +41,7 @@ mytable = TableOne(csv, columns=cols, categorical=category_cols,
 print(mytable.tabulate(tablefmt="rst"))
 
 # %%
-csv['gro']
+mytable = TableOne(csv.query("group == 2").query("cancer == 1"), columns=cols, categorical=category_cols,
+                nonnormal='bili')
+print(mytable.tabulate(tablefmt="rst"))
+# %%
