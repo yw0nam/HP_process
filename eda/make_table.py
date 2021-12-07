@@ -30,14 +30,15 @@ csv = csv.rename({'사망여부':'death', 'cancer_fu':'cancer'}, axis=1)
 cols = ['age', 'BMI', 'CCI', 'Hb', 'TG', 
                 'HDL', 'LDL', 'glucose',
                 'sex', 'smoking', 'alcohol_drinking', 
-                'physical_activity', 'EGD', 'Adenoma', 'cancer', 'death', 'death_fu_duration', 'cancer_fu_duration']
+                'physical_activity', 'EGD', 'cancer', 
+                'death', 'death_fu_duration', 'cancer_fu_duration']
 
 category_cols = ['sex', 'smoking', 'alcohol_drinking', 
-                'physical_activity', 'EGD', 'Adenoma'
-                 , 'cancer', 'death']
+                'physical_activity', 'EGD', 'cancer', 'death']
 
 mytable = TableOne(csv, columns=cols, categorical=category_cols,
                    groupby='group', pval=True, nonnormal='bili')
 print(mytable.tabulate(tablefmt="rst"))
 
 # %%
+csv['gro']
