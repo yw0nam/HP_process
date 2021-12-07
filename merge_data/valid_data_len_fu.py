@@ -10,6 +10,9 @@ pd.set_option('display.max_columns', None)
 
 # %%
 csv = pd.read_csv('../data_for_analysis/bx_for_hp.cov.fillna_cancer.up_death.final_fu.csv')
+print(len(csv))
+csv = csv.query('group == (3, 4)')
+print(len(csv))
 csv['처방일자'] = pd.to_datetime(csv['처방일자'])
 csv['first_fu'] = pd.to_datetime(csv['first_fu'])
 csv['last_fu'] = pd.to_datetime(csv['last_fu'])
@@ -23,9 +26,12 @@ csv['final_fu_cdw'] = csv.apply(lambda x: None if (x['first_fu'] - x['final_fu_c
 csv['final_fu_cdw'] = csv['final_fu_cdw'].fillna('K')
 csv['temp'] = csv['fu_dates'] + '|' +  csv['final_fu_cdw'].astype(str)
 csv['temp'] = csv['temp'].map(lambda x: x.split('|')[:-1] if x.split('|')[-1] == 'K' else x.split('|'))
+csv['temp'] = csv['temp'].map(lambda x: [i.split()[0] for i in x])
 csv = csv[csv['temp'].map(lambda x: len(list(set(x))) >= 2)]
+print(len(csv))
 # %%
 csv = csv.query('(fu_1to2 >= 365) or (fu_1to3 >= 365)')
+print(len(csv))
 # %%
 def index_date_cal(baseline_fu, first_fu, last_fu):
     if (first_fu - baseline_fu).days >= 365:
@@ -37,17 +43,12 @@ def index_date_cal(baseline_fu, first_fu, last_fu):
     
 csv['index_date'] = csv.apply(lambda x: index_date_cal(x['처방일자'], x['first_fu'], x['last_fu']), axis=1)
  # %%
-csv['final_fu_death'] = csv['사망일']
-csv['final_fu_death'] = csv['final_fu_death'].fillna(csv['temp'].map(lambda x: max(x)))
+csv['final_fu_death'] = csv['사망일'].apply(lambda x: x if type(x) == str else '2021-10-12')
+csv['cancer_fu'] = csv.apply(lambda x: None if x['cancer'] == 'Y' and x['cancer_date'] >= '2021-10-12' else x['cancer'], axis=1)
+csv['cancer_fu_date'] = csv['cancer_date'].fillna(csv['temp'].map(lambda x: max(x))).map(lambda x: '2021-10-12' if x >= '2021-10-12' else x)
 csv = csv.drop(['temp', 'final_fu_cdw'], axis=1)
 # %%
-csv['cancer_fu'] = csv.apply(lambda x: None if x['cancer'] == 'Y' and x['cancer_date'] >= '2021-10-12' else x['cancer'], axis=1)
-csv['cancer_fu_date'] = csv['cancer_date'].fillna(csv['final_fu_death']).map(lambda x: '2021-10-12' if x >= '2021-10-12' else x)
-
-# %%
 csv = csv.query('fu_1to2 <= 1895')
-csv['cancer_fu_date'] = csv.apply(lambda x: '2021-10-12' if x['cancer_fu'] != 'Y' else x['cancer_fu_date'], axis=1)
-csv['final_fu_death'] = csv.apply(lambda x: '2021-10-12' if x['사망여부'] != 'Y' else x['final_fu_death'], axis=1)
 csv['cancer_fu_date'] = pd.to_datetime(csv['cancer_fu_date'])
 csv['final_fu_death'] = pd.to_datetime(csv['final_fu_death'])
 # # %%
@@ -78,12 +79,12 @@ csv['final_fu_death'] = pd.to_datetime(csv['final_fu_death'])
 # csv = csv[csv.apply(lambda x: check_cancer_or_death(x['사망여부'],
 #                                               x['final_fu_death'],x['index_date']), axis=1) != 'N']
 # %%
-print(len(csv[(csv['cancer_fu_date'] - csv['index_date']).map(lambda x: x.days) <= 0]))
-print(len(csv[(csv['final_fu_death'] - csv['index_date']).map(lambda x: x.days) <= 0]))
+print(len(csv[(csv['cancer_fu_date'] - csv['index_date']).map(lambda x: x.days) < 0]))
+print(len(csv[(csv['final_fu_death'] - csv['index_date']).map(lambda x: x.days) < 0]))
 # %%
 # %%
-csv = csv[(csv['final_fu_death'] - csv['index_date']).map(lambda x: x.days) > 0]
-csv = csv[(csv['cancer_fu_date'] - csv['index_date']).map(lambda x: x.days) > 0]
+csv = csv[(csv['final_fu_death'] - csv['index_date']).map(lambda x: x.days) >= 0]
+csv = csv[(csv['cancer_fu_date'] - csv['index_date']).map(lambda x: x.days) >= 0]
 # %%
 csv = csv.rename({'BZ':'HDL'}, axis=1) 
 csv['사망여부'] =csv['사망여부'].fillna('N')
