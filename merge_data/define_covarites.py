@@ -2,9 +2,21 @@
 import pandas as pd
 import numpy as np
 import re
+import argparse
 pd.set_option('display.max_columns', None)
+
+def define_argparser():
+    p = argparse.ArgumentParser()
+
+    p.add_argument('--folder', required=True)
+    p.add_argument('--dataset_name', required=True)
+    config = p.parse_args()
+
+    return config
+
 # %%
-csv = pd.read_csv('../data_for_analysis/any_bx.csv')
+config = define_argparser()
+csv = pd.read_csv('../%s/%s.csv'%(config.folder, config.dataset_name))
 valid = csv[csv['valid'] == 1]
 # %%
 csv = valid[['환자번호#1', '처방일자#3']]
@@ -161,4 +173,4 @@ data = pd.merge(csv, valid[cols], how='left',
 # %%
 data = data.drop(['환자번호#1'], axis=1)
 # %%
-data.to_csv('../data_for_analysis/any_bx.cov.csv', index=False)
+data.to_csv('../%s/%s.cov.csv'%(config.folder, config.dataset_name), index=False)

@@ -1,10 +1,20 @@
 # %%
 import pandas as pd
 from utils import *
+import argparse
 pd.set_option('display.max_columns', None)
-# %%
 
-parser = csv_parser('../data_for_analysis/any_bx.cov.csv')
+def define_argparser():
+    p = argparse.ArgumentParser()
+
+    p.add_argument('--folder', required=True)
+    p.add_argument('--dataset_name', required=True)
+    config = p.parse_args()
+
+    return config
+# %%
+config = define_argparser()
+parser = csv_parser('../%s/%s.cov.csv'%(config.folder, config.dataset_name))
 parser.read_csv()
 # %%
 csv = parser.check_cancer(risk_path='../etc_data/건진 CANCER 관리 대상자-위암_2021_10_12.xlsx',
@@ -20,4 +30,4 @@ csv = csv.drop(['환자번호#1', 'cancer_date_histology', 'cancer_date_bx', 'ca
 csv = csv.drop_duplicates(subset='환자번호')
 
 # %%
-csv.to_csv('../data_for_analysis/any_bx.cov.fillna_cancer.csv', index=False)
+csv.to_csv('../%s/%s.cov.fillna_cancer.csv'%(config.folder, config.dataset_name), index=False)

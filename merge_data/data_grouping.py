@@ -1,14 +1,27 @@
 # %%
+import argparse
 from tqdm import tqdm
 from utils import *
 # from elasticsearch import Elasticsearch, helpers
 import pandas as pd
 import numpy as np
 import re
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning) 
 pd.set_option('display.max_columns', None)
 
+def define_argparser():
+    p = argparse.ArgumentParser()
+
+    p.add_argument('--folder', required=True)
+    p.add_argument('--dataset_name', required=True)
+    config = p.parse_args()
+
+    return config
+
 # %%
-csv = pd.read_csv('../data/apply_exclusion.csv')
+config = define_argparser()
+csv = pd.read_csv('../%s/apply_exclusion.csv'%config.folder)
 # csv = csv.drop_duplicates('환자번호#1')
 bert_predict = pd.read_csv('../data/analysis_bert_predict.csv', index_col=0)
 csv_bert = csv.query('index in @bert_predict.index')
@@ -190,7 +203,8 @@ group_4 = list(set(list(csv_ubt_4.index) + list(csv_clo_4.index)+ list(csv_cz_4.
 # %%
 cols = list(csv_date.columns[173:])
 valid_ls = []
-for i in tqdm(range(len(csv_date))):
+# for i in tqdm(range(len(csv_date))):
+for i in range(len(csv_date)):
     flag = 1
     for col in cols:
         if type(csv_date.iloc[i][col]) == str:
@@ -214,7 +228,8 @@ first_fu = []
 last_fu_name = []
 first_fu_name = []
 
-for i in tqdm(range(len(valid_data))):
+# for i in tqdm(range(len(valid_data))):
+for i in range(len(valid_data)):
     col_name = []
     dates = []
     for col in cols:
@@ -250,7 +265,8 @@ col_ls = group_1_col + group_4_col
 # %%
 first_fu = []
 first_fu_name = []
-for i in tqdm(range(len(valid_data))):
+# for i in tqdm(range(len(valid_data))):
+for i in range(len(valid_data)):
     col_name = []
     dates = []
     for col in col_ls:
@@ -272,7 +288,8 @@ valid_data['first_negative_name'] = first_fu_name
 # %%
 fu_date_list = []
 fu_name_list = []
-for i in tqdm(range(len(valid_data))):
+# for i in tqdm(range(len(valid_data))):
+for i in range(len(valid_data)):
     col_name = []
     dates = []
     for col in cols:
@@ -285,6 +302,6 @@ for i in tqdm(range(len(valid_data))):
 valid_data['fu_dates'] = fu_date_list
 valid_data['fu_names'] = fu_name_list
 # %%
-valid_data.to_csv('../data_for_analysis/any_bx.csv', index=False)
+valid_data.to_csv('../%s/%s.csv'%(config.folder, config.dataset_name), index=False)
 
 # %%

@@ -1,7 +1,18 @@
 # %%
 import pandas as pd
+import argparse
 pd.set_option('display.max_columns', None)
+
+def define_argparser():
+    p = argparse.ArgumentParser()
+
+    p.add_argument('--folder', required=True)
+    p.add_argument('--dataset_name', required=True)
+    config = p.parse_args()
+
+    return config
 # %%
+config = define_argparser()
 csv_admission = pd.read_csv('../etc_data/hp_base_입원.csv', index_col=0, encoding='CP949')
 # csv_admission.head()
 csv_admission = csv_admission.drop('처방일자#2', axis=1)
@@ -28,10 +39,10 @@ temp['final_observe_outpatient'] = pd.to_datetime(temp['final_observe_outpatient
 temp['final_fu_cdw'] = temp.apply(lambda x: max(x['final_observe_screening'], 
            x['final_observe_outpatient'], x['final_observe_admission']), axis=1)
 # %%
-csv = pd.read_csv('../data_for_analysis/any_bx.cov.fillna_cancer.up_death.csv')
+csv = pd.read_csv('../%s/%s.cov.fillna_cancer.up_death.csv'%(config.folder, config.dataset_name))
 csv = pd.merge(csv, temp[['환자번호', 'final_fu_cdw']], how='left', left_on='환자번호',
          right_on='환자번호')
 
 # %%
-csv.to_csv('../data_for_analysis/any_bx.cov.fillna_cancer.up_death.final_fu.csv', index=False)
+csv.to_csv('../%s/%s.cov.fillna_cancer.up_death.final_fu.csv'%(config.folder, config.dataset_name), index=False)
 # %%

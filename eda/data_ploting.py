@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 pd.set_option('display.max_columns', None)
 
 # %%
-csv = pd.read_csv('../data_for_analysis/bx_for_hp.cov.fillna_cancer.up_death.final_fu.add_fu.csv')
+csv = pd.read_csv('../data_with_family_hx/bx_for_hp.cov.fillna_cancer.up_death.final_fu.add_fu.csv')
 
 # %%
 # csv['cancer_fu_date'] = csv.apply(lambda x: '2021-10-12' if x['cancer_fu'] == 'N' else x['cancer_fu_date'], axis=1)

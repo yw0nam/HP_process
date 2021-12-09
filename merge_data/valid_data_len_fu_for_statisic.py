@@ -5,21 +5,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tableone import TableOne
 import warnings
-import argparse
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 pd.set_option('display.max_columns', None)
 
-def define_argparser():
-    p = argparse.ArgumentParser()
-
-    p.add_argument('--folder', required=True)
-    p.add_argument('--dataset_name', required=True)
-    config = p.parse_args()
-
-    return config
 # %%
-config = define_argparser()
-csv = pd.read_csv('../%s/%s.cov.fillna_cancer.up_death.final_fu.csv'%(config.folder, config.dataset_name))
+csv = pd.read_csv('../data_for_analysis/bx_for_hp.cov.fillna_cancer.up_death.final_fu.csv')
 print(len(csv))
 csv = csv.query('group == (3, 4)')
 print(len(csv))
@@ -110,8 +100,8 @@ category_cols = ['sex', 'smoking', 'alcohol_drinking',
 
 mytable = TableOne(csv, columns=cols, categorical=category_cols,
                    groupby='group', pval=True, nonnormal='bili')
-# print(mytable.tabulate(tablefmt="rst"))
+print(mytable.tabulate(tablefmt="rst"))
 
 # %%
-csv.to_csv('../%s/%s.cov.fillna_cancer.up_death.final_fu.add_fu.csv'%(config.folder, config.dataset_name), index=False)
+csv.to_csv('./../data_for_analysis/bx_for_hp.cov.fillna_cancer.up_death.final_fu.add_fu.csv', index=False)
 # %%
