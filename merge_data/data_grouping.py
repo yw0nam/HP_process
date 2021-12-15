@@ -22,7 +22,7 @@ def define_argparser():
 # %%
 config = define_argparser()
 csv = pd.read_csv('../%s/apply_exclusion.csv'%config.folder)
-# csv = csv.drop_duplicates('환자번호#1')
+csv = csv.drop_duplicates('환자번호#1')
 bert_predict = pd.read_csv('../data/analysis_bert_predict.csv', index_col=0)
 csv_bert = csv.query('index in @bert_predict.index')
 csv_date = csv.copy()

@@ -6,12 +6,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tableone import TableOne
 import warnings
-from lifelines import CoxPHFitter
-from lifelines import KaplanMeierFitter
-from lifelines import NelsonAalenFitter
+from lifelines import KaplanMeierFitter, NelsonAalenFitter, CoxPHFitter
+from lifelines.statistics import logrank_test
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 pd.set_option('display.max_columns', None)
-
 # %%
 csv = pd.read_csv('../data_with_family_hx/bx_for_hp.cov.fillna_cancer.up_death.final_fu.add_fu.csv')
 
@@ -29,101 +27,74 @@ csv['final_fu_death'] = pd.to_datetime(csv['final_fu_death'])
 csv['cancer_fu_date'] = pd.to_datetime(csv['cancer_fu_date'])
 csv['first_fu'] = pd.to_datetime(csv['first_fu'])
 csv['index_date'] = pd.to_datetime(csv['index_date'])
-csv['group_merged'] = csv['group'].replace({2: '2 and 3', 3: '2 and 3'})
 # %%
+csv['group'] = csv['group'].replace({3:1, 4:2})
 csv['EGD'] = csv['EGD'].replace({'WNL': 0, 'CSG': 0, 'LFG':0, 'CAG':1, 'MG':2})
 # %%
+csv['cancer_fu_duration'] = (csv['cancer_fu_date'] - csv['index_date']).map(lambda x: x.days)
+csv['death_fu_duration'] = (csv['final_fu_death'] - csv['index_date']).map(lambda x: x.days)
+# %%
+results = logrank_test(csv.query('group == 1')['cancer_fu_duration'], csv.query('group == 2')['cancer_fu_duration'],
+                       event_observed_A=csv.query('group == 1')['cancer_fu'], 
+                       event_observed_B=csv.query('group == 2')['cancer_fu'])
+# %%
 naf = NelsonAalenFitter()
-# naf.fit(durations=csv.query('group == 1').apply(lambda x: x['cancer_fu_date'] - x['index_date'], axis=1),
-#         event_observed=csv.query('group == 1')['cancer_fu'], label='group_1')
-# naf.plot_cumulative_hazard()
-# naf.fit(durations=csv.query('group == 2').apply(lambda x: x['cancer_fu_date'] - x['index_date'], axis=1),
-#         event_observed=csv.query('group == 2')['cancer_fu'], label='group_2')
-# naf.plot_cumulative_hazard()
-naf.fit(durations=csv.query('group == 3').apply(lambda x: x['cancer_fu_date'] - x['index_date'], axis=1),
-        event_observed=csv.query('group == 3')['cancer_fu'], label='HP persistent')
+naf.fit(durations=csv.query('group == 1')['cancer_fu_duration'],
+        event_observed=csv.query('group == 1')['cancer_fu'], label='HP persistent')
 naf.plot_cumulative_hazard()
-naf.fit(durations=csv.query('group == 4').apply(lambda x: x['cancer_fu_date'] - x['index_date'], axis=1),
-        event_observed=csv.query('group == 4')['cancer_fu'], label='HP natural regression')
+naf.fit(durations=csv.query('group == 2')['cancer_fu_duration'],
+        event_observed=csv.query('group == 2')['cancer_fu'], label='HP natural regression')
 naf.plot_cumulative_hazard()
+plt.ylim(0, 0.35)
 plt.xlabel("Days passed")
 plt.ylabel("cumulative hazard of cancer")
+plt.text(0, 0.25, 'Log rank P=%s'%str(round(results.p_value, 4)), va='bottom', in_layout=False)
 plt.title("NelsonAalenFitter plot about cancer")
 plt.legend(loc='upper left')
 # %%
-# naf = NelsonAalenFitter()
-# naf.fit(durations=csv.query('group == 1').apply(lambda x: x['cancer_fu_date'] - x['index_date'], axis=1),
-#         event_observed=csv.query('group == 1')['cancer_fu'], label='group_1')
-# t = naf.plot(ci_show=True, at_risk_counts=True,  ylabel='probability of Cancer')
-# plt.ylim(0, 0.2)
-# t.get_legend().remove()
-# plt.show()
-# %%
-# naf.fit(durations=csv.query('group == 2').apply(lambda x: x['cancer_fu_date'] - x['index_date'], axis=1),
-#         event_observed=csv.query('group == 2')['cancer_fu'], label='group_2')
-# t = naf.plot(ci_show=True, at_risk_counts=True,  ylabel='probability of Cancer')
-# plt.ylim(0, 0.2)
-# t.get_legend().remove()
-# plt.show()
-# %%
-naf.fit(durations=csv.query('group == 3').apply(lambda x: x['cancer_fu_date'] - x['index_date'], axis=1),
-        event_observed=csv.query('group == 3')['cancer_fu'], label='HP persistent')
+naf.fit(durations=csv.query('group == 1')['cancer_fu_duration'],
+        event_observed=csv.query('group == 1')['cancer_fu'], label='HP persistent')
 t = naf.plot(ci_show=True, at_risk_counts=True,  ylabel='probability of Cancer')
-plt.ylim(0, 0.2)
+plt.ylim(0, 0.35)
 t.get_legend().remove()
 plt.show()
 # %%
-naf.fit(durations=csv.query('group == 4').apply(lambda x: x['cancer_fu_date'] - x['index_date'], axis=1),
-        event_observed=csv.query('group == 4')['cancer_fu'], label='HP natural regression')
+naf.fit(durations=csv.query('group == 2')['cancer_fu_duration'],
+        event_observed=csv.query('group == 2')['cancer_fu'], label='HP natural regression')
 t = naf.plot(ci_show=True, at_risk_counts=True,  ylabel='probability of Cancer')
-plt.ylim(0, 0.2)
+plt.ylim(0, 0.35)
 t.get_legend().remove()
 plt.show()
+# %%
+results = logrank_test(csv.query('group == 1')['death_fu_duration'], csv.query('group == 2')['death_fu_duration'],
+                       event_observed_A=csv.query('group == 1')['사망여부'], 
+                       event_observed_B=csv.query('group == 2')['사망여부'])
 # %%
 kmf = KaplanMeierFitter() 
-# kmf.fit(durations=csv.query('group == 1').apply(lambda x: x['final_fu_death'] - x['index_date'], axis=1),
-#         event_observed=csv.query('group == 1')['사망여부'], label='group_1')
-# kmf.plot_survival_function()
-# kmf.fit(durations=csv.query('group == 2').apply(lambda x: x['final_fu_death'] - x['index_date'], axis=1),
-#         event_observed=csv.query('group == 2')['사망여부'], label='group_2')
-# kmf.plot_survival_function()
-kmf.fit(durations=csv.query('group == 3').apply(lambda x: x['final_fu_death'] - x['index_date'], axis=1),
-        event_observed=csv.query('group == 3')['사망여부'], label='HP persistent')
+kmf.fit(durations=csv.query('group == 1')['death_fu_duration'],
+        event_observed=csv.query('group == 1')['사망여부'], label='HP persistent')
 kmf.plot_survival_function()
-kmf.fit(durations=csv.query('group == 4').apply(lambda x: x['final_fu_death'] - x['index_date'], axis=1),
-        event_observed=csv.query('group == 4')['사망여부'], label='HP natural regression')
+kmf.fit(durations=csv.query('group == 2')['death_fu_duration'],
+        event_observed=csv.query('group == 2')['사망여부'], label='HP natural regression')
+plt.ylim(0.8, 1)
 kmf.plot_survival_function()
+plt.text(0, 0.85, 'Log rank P=%s'%str(round(results.p_value, 4)), va='bottom', in_layout=False)
 plt.xlabel("Days passed")
 plt.ylabel("probability of Death")
 plt.title("KaplanMeier survival plot")
 plt.legend(loc='lower left')
 # %%
-# kmf = KaplanMeierFitter() 
-# kmf.fit(durations=csv.query('group == 1').apply(lambda x: x['final_fu_death'] - x['index_date'], axis=1),
-#         event_observed=csv.query('group == 1')['사망여부'], label='group_1')
-# t = kmf.plot(ci_show=True, at_risk_counts=True, ylabel='probability of Death')
-# plt.ylim(0.7, 1)
-# t.get_legend().remove()
-# plt.show()
-# %%
-# kmf.fit(durations=csv.query('group == 2').apply(lambda x: x['final_fu_death'] - x['index_date'], axis=1),
-#         event_observed=csv.query('group == 2')['사망여부'],  label='group_2')
-# t = kmf.plot(ci_show=True, at_risk_counts=True, ylabel='probability of Death')
-# plt.ylim(0.7, 1)
-# t.get_legend().remove()
-# plt.show()
-# %%
-kmf.fit(durations=csv.query('group == 3').apply(lambda x: x['final_fu_death'] - x['index_date'], axis=1),
-        event_observed=csv.query('group == 3')['사망여부'],  label='HP persistent')
+kmf.fit(durations=csv.query('group == 1')['death_fu_duration'],
+        event_observed=csv.query('group == 1')['사망여부'],  label='HP persistent')
 t = kmf.plot(ci_show=True, at_risk_counts=True, ylabel='probability of Death')
-plt.ylim(0.7, 1)
+plt.ylim(0.8, 1)
 t.get_legend().remove()
 plt.show()
 # %%
-kmf.fit(durations=csv.query('group == 4').apply(lambda x: x['final_fu_death'] - x['index_date'], axis=1),
-        event_observed=csv.query('group == 4')['사망여부'],  label='HP natural regression')
+kmf.fit(durations=csv.query('group == 2')['death_fu_duration'],
+        event_observed=csv.query('group == 2')['사망여부'],  label='HP natural regression')
 t = kmf.plot(ci_show=True, at_risk_counts=True, ylabel='probability of Death')
-plt.ylim(0.7, 1)
+plt.ylim(0.8, 1)
 t.get_legend().remove()
 plt.show()
 # %%
