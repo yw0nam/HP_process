@@ -119,7 +119,8 @@ csv.to_csv('../%s/%s.cov.fillna_cancer.up_death.final_fu.add_fu.csv'%(config.fol
 # %%
 cols = ['환자번호', '처방일자','age', 'sex', 'BMI', 
         'CCI', 'Hb', 'TG', 'HDL', 'LDL', 
-        'glucose', 'smoking', 'alcohol_drinking', 'physical_activity', 'EGD', 'group']
+        'glucose', 'smoking', 'alcohol_drinking', 'physical_activity', 
+        'EGD', 'group', 'index_date']
 df = csv[cols].copy()
 # %%
 df['first_hp_fu_date'] = csv['first_fu']
@@ -138,15 +139,15 @@ csv_family_cancer = csv_family_cancer[['환자번호#1', 'family_hx']]
 df = pd.merge(df, csv_family_cancer, how='left', left_on='환자번호', right_on='환자번호#1')
 df = df.drop('환자번호#1', axis=1)
 # %%
-df['cancer_date'] = csv.apply(lambda x: x['cancer_fu_date'] if x['cancer_fu'] == 'Y' else None, axis=1)
-df['death_date'] = csv.apply(lambda x: x['final_fu_death'] if x['사망여부'] == 'Y' else None, axis=1)
+df['cancer_date'] = csv.apply(lambda x: x['cancer_fu_date'] if x['cancer_fu'] == 'Y' else None, axis=1).reset_index(drop=True)
+df['death_date'] = csv.apply(lambda x: x['final_fu_death'] if x['사망여부'] == 'Y' else None, axis=1).reset_index(drop=True)
 # %%
 df['EGD'] = df['EGD'].replace({'WNL': 0, 'CAG': 1, 'MG':2, 'CSG': 0, 'LFG':0})
 # %%
-# t = pd.read_excel('../data_with_family_hx/data_bx_for_hp.xlsx')
-# t['bx_for_hp'] = 1
-# df = pd.merge(df, t[['환자번호', 'bx_for_hp']], how='left',
-#          left_on='환자번호', right_on='환자번호')
+t = pd.read_excel('../data_with_family_hx/data_bx_for_hp.xlsx')
+t['bx_for_hp'] = 1
+df = pd.merge(df, t[['환자번호', 'bx_for_hp']], how='left',
+         left_on='환자번호', right_on='환자번호')
 # %%
 df.to_excel('../data_with_family_hx/data_bx_for_hp.xlsx', index=False)
 # %%
