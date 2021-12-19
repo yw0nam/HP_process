@@ -11,7 +11,7 @@ from lifelines.statistics import logrank_test
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 pd.set_option('display.max_columns', None)
 # %%
-csv = pd.read_csv('../data_with_family_hx/bx_for_hp.cov.fillna_cancer.up_death.final_fu.add_fu.csv')
+csv = pd.read_csv('../data_with_family_hx/bx_for_hp.cov.fillna_cancer.up_death.final_fu.add_fu.cancer_stage.csv')
 
 # %%
 # csv['cancer_fu_date'] = csv.apply(lambda x: '2021-10-12' if x['cancer_fu'] == 'N' else x['cancer_fu_date'], axis=1)
@@ -19,31 +19,31 @@ csv = pd.read_csv('../data_with_family_hx/bx_for_hp.cov.fillna_cancer.up_death.f
 # %%
 csv['사망여부'] = csv['사망여부'].replace({'N':0, 'Y':1})
 csv['사망여부'] = csv['사망여부'].fillna(0).astype(int)
-csv['cancer_fu'] = csv['cancer_fu'].replace({'N':0, 'Y':1})
-csv['cancer_fu'] = csv['cancer_fu'].fillna(0).astype(int)
+csv['cancer_fu_with_stage'] = csv['cancer_fu_with_stage'].replace({'N':0, 'Y':1})
+csv['cancer_fu_with_stage'] = csv['cancer_fu_with_stage'].fillna(0).astype(int)
 # %%
 csv['처방일자'] = pd.to_datetime(csv['처방일자'])
 csv['final_fu_death'] = pd.to_datetime(csv['final_fu_death'])
-csv['cancer_fu_date'] = pd.to_datetime(csv['cancer_fu_date'])
+csv['cancer_fu_date_with_stage'] = pd.to_datetime(csv['cancer_fu_date_with_stage'])
 csv['first_fu'] = pd.to_datetime(csv['first_fu'])
 csv['index_date'] = pd.to_datetime(csv['index_date'])
 # %%
 csv['group'] = csv['group'].replace({3:1, 4:2})
 csv['EGD'] = csv['EGD'].replace({'WNL': 0, 'CSG': 0, 'LFG':0, 'CAG':1, 'MG':2})
 # %%
-csv['cancer_fu_duration'] = (csv['cancer_fu_date'] - csv['index_date']).map(lambda x: x.days)
+csv['cancer_fu_duration'] = (csv['cancer_fu_date_with_stage'] - csv['index_date']).map(lambda x: x.days)
 csv['death_fu_duration'] = (csv['final_fu_death'] - csv['index_date']).map(lambda x: x.days)
 # %%
 results = logrank_test(csv.query('group == 1')['cancer_fu_duration'], csv.query('group == 2')['cancer_fu_duration'],
-                       event_observed_A=csv.query('group == 1')['cancer_fu'], 
-                       event_observed_B=csv.query('group == 2')['cancer_fu'])
+                       event_observed_A=csv.query('group == 1')['cancer_fu_with_stage'], 
+                       event_observed_B=csv.query('group == 2')['cancer_fu_with_stage'])
 # %%
 naf = NelsonAalenFitter()
 naf.fit(durations=csv.query('group == 1')['cancer_fu_duration'],
-        event_observed=csv.query('group == 1')['cancer_fu'], label='HP persistent')
+        event_observed=csv.query('group == 1')['cancer_fu_with_stage'], label='HP persistent')
 naf.plot_cumulative_hazard()
 naf.fit(durations=csv.query('group == 2')['cancer_fu_duration'],
-        event_observed=csv.query('group == 2')['cancer_fu'], label='HP natural regression')
+        event_observed=csv.query('group == 2')['cancer_fu_with_stage'], label='HP natural regression')
 naf.plot_cumulative_hazard()
 plt.ylim(0, 0.35)
 plt.xlabel("Days passed")
