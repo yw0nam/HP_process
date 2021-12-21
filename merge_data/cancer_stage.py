@@ -84,45 +84,53 @@ cancer_csv = pd.concat([cancer_stage_1, cancer_stage_2, cancer_stage_3])
 cancer_csv = cancer_csv.drop_duplicates(subset=['환자번호#1'])
 
 # %%
-csv = pd.read_excel('../data_with_family_hx/data_bx_for_hp.xlsx')
+csv = pd.read_excel('../data_with_family_hx/data_any_bx.xlsx')
 csv = pd.merge(csv, cancer_csv, how='left', left_on=['환자번호'], right_on=['환자번호#1']).drop(['환자번호#1'], axis=1)
 csv['family_hx'] = csv['family_hx'].fillna('N')
 # %%
+csv['cancer_stage'] = csv.apply(lambda x: x['cancer_stage'] if str(x['cancer_date']) != "NaT" else None, axis=1)
+csv['cancer_stage_date'] = csv.apply(lambda x: x['cancer_stage_date'] if str(x['cancer_date']) != "NaT" else None, axis=1)
+# %%
+csv['group'] = csv['group'].replace({3:1, 4:2})
+# %%
 # print(len(csv[(csv['cancer_stage_date'] - csv['index_date']).map(lambda x: x.days) < 0]))
 # %%
-csv['cancer_stage_date'] = csv['cancer_stage_date'].fillna('2022-10-31')
-csv['cancer_stage_date'] = csv['cancer_stage_date'].map(lambda x: x if x < '2021-10-13' else None)
+# csv['cancer_stage_date'] = csv['cancer_stage_date'].fillna('2022-10-31')
+# csv['cancer_stage_date'] = csv['cancer_stage_date'].map(lambda x: x if x < '2021-10-13' else None)
 
+# # %%
+# csv['cancer_stage_date'] = pd.to_datetime(csv['cancer_stage_date'])
+# csv = csv[~((csv['cancer_stage_date'] - csv['index_date']).map(lambda x: x.days) < 0)]
+# csv['cancer_not_from_stage'] = csv['cancer_date'].dropna().map(lambda x: 'Y')
+# csv['cancer_date'] = csv['cancer_date'].fillna(csv['cancer_stage_date'])
 # %%
-csv['cancer_stage_date'] = pd.to_datetime(csv['cancer_stage_date'])
-csv = csv[~((csv['cancer_stage_date'] - csv['index_date']).map(lambda x: x.days) < 0)]
-csv['cancer_not_from_stage'] = csv['cancer_date'].dropna().map(lambda x: 'Y')
-csv['cancer_date'] = csv['cancer_date'].fillna(csv['cancer_stage_date'])
+csv.to_excel('../data_with_family_hx/data_any_bx.add_stage.xlsx', index=False)
 # %%
-csv.to_excel('../data_with_family_hx/data_bx_for_hp.add_stage.xlsx', index=False)
-# %%
-csv = pd.read_csv('../data_with_family_hx/bx_for_hp.cov.fillna_cancer.up_death.final_fu.add_fu.csv')
+csv = pd.read_csv('../data_with_family_hx/any_bx.cov.fillna_cancer.up_death.final_fu.add_fu.csv')
 csv = pd.merge(csv, cancer_csv, how='left', left_on=['환자번호'], right_on=['환자번호#1']).drop(['환자번호#1'], axis=1)
 # %%
-csv['cancer_stage_date'] = csv['cancer_stage_date'].fillna('2022-10-31')
-csv['cancer_stage_date'] = csv['cancer_stage_date'].map(lambda x: x if x < '2021-10-13' else None)
-csv['cancer_stage_date'] = pd.to_datetime(csv['cancer_stage_date'])
-csv['index_date'] = pd.to_datetime(csv['index_date'])
-csv = csv[~((csv['cancer_stage_date'] - csv['index_date']).map(lambda x: x.days) < 0)]
+csv['cancer_stage'] = csv.apply(lambda x: x['cancer_stage'] if type(x['cancer_date']) != float else None, axis=1)
+csv['cancer_stage_date'] = csv.apply(lambda x: x['cancer_stage_date'] if type(x['cancer_date']) != float else None, axis=1)
 # %%
-def apply_fn(cancer_fu, cancer_fu_date, cancer_stage_date):
-    if cancer_fu == 'Y':
-        return cancer_fu_date
-    elif cancer_fu == 'N':
-        return cancer_stage_date
+# csv['cancer_stage_date'] = csv['cancer_stage_date'].fillna('2022-10-31')
+# csv['cancer_stage_date'] = csv['cancer_stage_date'].map(lambda x: x if x < '2021-10-13' else None)
+# csv['cancer_stage_date'] = pd.to_datetime(csv['cancer_stage_date'])
+# csv['index_date'] = pd.to_datetime(csv['index_date'])
+# csv = csv[~((csv['cancer_stage_date'] - csv['index_date']).map(lambda x: x.days) < 0)]
+# %%
+# def apply_fn(cancer_fu, cancer_fu_date, cancer_stage_date):
+#     if cancer_fu == 'Y':
+#         return cancer_fu_date
+#     elif cancer_fu == 'N':
+#         return cancer_stage_date
     
-csv['cancer_fu_date_with_stage'] = csv.dropna(subset=['cancer_stage_date']).apply(\
-                                                lambda x: apply_fn(x['cancer_fu'],
-                                                                x['cancer_fu_date'],
-                                                                x['cancer_stage_date']), axis=1)
-csv['cancer_fu_date_with_stage'] = csv['cancer_fu_date_with_stage'].fillna(csv['cancer_fu_date'])
-csv['cancer_fu_with_stage'] = csv.dropna(subset=['cancer_stage_date']).apply(lambda x: 'Y' if x['cancer_fu'] == 'N' else x['cancer_fu'], axis=1)
+# csv['cancer_fu_date_with_stage'] = csv.dropna(subset=['cancer_stage_date']).apply(\
+#                                                 lambda x: apply_fn(x['cancer_fu'],
+#                                                                 x['cancer_fu_date'],
+#                                                                 x['cancer_stage_date']), axis=1)
+# csv['cancer_fu_date_with_stage'] = csv['cancer_fu_date_with_stage'].fillna(csv['cancer_fu_date'])
+# csv['cancer_fu_with_stage'] = csv.dropna(subset=['cancer_stage_date']).apply(lambda x: 'Y' if x['cancer_fu'] == 'N' else x['cancer_fu'], axis=1)
 # %%
 
-csv.to_csv('../data_with_family_hx/bx_for_hp.cov.fillna_cancer.up_death.final_fu.add_fu.cancer_stage.csv', index=False)
+csv.to_csv('../data_with_family_hx/any_bx.cov.fillna_cancer.up_death.final_fu.add_fu.cancer_stage.csv', index=False)
 # %%

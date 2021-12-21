@@ -8,13 +8,23 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 pd.set_option('display.max_columns', None)
 # %%
-csv = pd.read_csv('../data_with_family_hx/bx_for_hp.cov.fillna_cancer.up_death.final_fu.add_fu.csv')
-csv
+data_name = 'any_bx'
+save_path = '../images/paper_figure/2021_12_20/'
+read_path = '../data_with_family_hx/'
+csv = pd.read_csv(read_path+'%s.cov.fillna_cancer.up_death.final_fu.add_fu.cancer_stage.csv'%(data_name))
+if data_name == 'any_bx':
+    t = pd.read_csv(read_path+'bx_for_hp.cov.fillna_cancer.up_death.final_fu.add_fu.cancer_stage.csv')
+    t['bx_for_hp'] = 1
+    csv = pd.merge(csv, t[['환자번호', 'bx_for_hp']], how='left',
+         left_on='환자번호', right_on='환자번호')
+    csv['bx_for_hp'] = csv['bx_for_hp'].fillna(0)
+    del t
 # %%
 csv['사망여부'] = csv['사망여부'].replace({'N':0, 'Y':1})
 csv['사망여부'] = csv['사망여부'].fillna(0).astype(int)
 csv['cancer_fu'] = csv['cancer_fu'].replace({'N':0, 'Y':1})
 csv['cancer_fu'] = csv['cancer_fu'].fillna(0).astype(int)
+csv['cancer_stage'] = csv['cancer_stage'].fillna('None')
 # %%
 csv['처방일자'] = pd.to_datetime(csv['처방일자'])
 csv['final_fu_death'] = pd.to_datetime(csv['final_fu_death'])
@@ -45,17 +55,19 @@ cols = ['age', 'BMI', 'CCI', 'Hb', 'TG',
                 'HDL', 'LDL', 'glucose',
                 'sex', 'smoking', 'alcohol_drinking', 
                 'physical_activity', 'EGD', 'family_hx', 'cancer', 
-                'death', 'death_fu_duration', 'cancer_fu_duration']
+                'death', 'death_fu_duration', 'cancer_fu_duration', 'cancer_stage']
 
 category_cols = ['sex', 'smoking', 'alcohol_drinking', 'family_hx',
-                'physical_activity', 'EGD', 'cancer', 'death']
+                'physical_activity', 'EGD', 'cancer', 'death', 'cancer_stage']
 
+if data_name == 'any_bx':
+    cols += ['bx_for_hp']
+    category_cols += ['bx_for_hp']
 mytable = TableOne(csv, columns=cols, categorical=category_cols,
                    groupby='group', pval=True, nonnormal='bili')
-print(mytable.tabulate(tablefmt="rst"))
-
+mytable.to_html('%s/%s_table.html'%(save_path, data_name))
 # %%
 mytable = TableOne(csv.query("group == 2").query("cancer == 1"), columns=cols, categorical=category_cols,
                 nonnormal='bili')
-print(mytable.tabulate(tablefmt="rst"))
+mytable.to_html('%s/%s_table_natrual_regression_only_cancer.html'%(save_path, data_name))
 # %%
