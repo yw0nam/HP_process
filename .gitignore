@@ -1,0 +1,9 @@
+/images/*
+/data/*
+/data_2/*
+/data_for_analysis/*
+/data_with_family_hx/*
+/ipynb/*
+/etc_data/*
+/merge_data/hp_bx_grouping.ipynb
+/merge_data/ids.txt

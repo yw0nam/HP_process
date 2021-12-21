@@ -34,7 +34,7 @@ eradication_csv_2 = pd.read_csv("../data/HP_drug_2_unlock.csv",
 with open('./ids.txt', 'r') as txt:
     ids = txt.readlines()
 ids = list(map(lambda x: re.sub('\n', '', x), ids))
-
+# %%
 ids = list(set(eradication_csv_1['환자번호#1'].to_list()  + eradication_csv_2['환자번호#1'].to_list())) + ids.split()
 index_eradication = list(csv[csv['환자번호#1'].isin(ids)].index)
 
@@ -45,37 +45,43 @@ index = list(set(index_160+index_161 + index_eradication))
 expr = 'index in @index'
 data_1 = csv.query(expr)
 
-temp = data_1[data_1['검사결과내용(최초1) #110'].map(lambda x: map_fn(x) != 0)]
+temp = data_1.copy()
+temp = temp[temp['검사결과내용(최초1) #104'].map(lambda x: map_fn(x) != 0)]
+query_text = ['for .* pylori', 'pylori .* was',
+              'pylori .* were', 'for .* HP', 'For .* pylori',
+              'pylori study']
 
+p = re.compile('|'.join(query_text))
+temp = temp[temp['검사결과내용(최초1) #104'].map(lambda x: find_text(x, p)) == 1]
 bert_pred_1 = bert_predict.query('index in @temp.index')
 temp['result'] = bert_pred_1
 temp = temp.query('result == 0')
-temp = temp[temp['검사명(최초1) #109'] != 'Urease Breath Test']
-
 temp = temp.dropna(subset=['result'])
 csv_bx_1 = temp[temp['검사명(최초1) #109'] != 'Urease Breath Test']
-
 # %%
 temp = data_1.copy()
 temp = temp[temp['검사결과내용(최초1) #104'].map(lambda x: map_fn(x) != 0)]
 p = re.compile('CLO.*[(]\s*[-]\s*[)]')
 csv_clo = temp[temp['검사결과내용(최초1) #104'].map(lambda x: find_text(x, p)) == 1]
-
+# %%
 cz_index = list(set(list(csv_bx_1.index) + list(csv_clo.index)))
 csv_cz_1 = data_1.query('index in @cz_index')
-
 # %%
 temp = data_1[data_1['검사결과내용(최초1) #116'].map(lambda x: map_fn(x) != 0)]
+
 query_text = ['result[\s]*:[\s]*negative', 'result[\s]*:[\s]*neagtive',
              'result[\s]*:[\s]*negaitve', 'result[\s]*:[\s]*negatie']
 p = re.compile('|'.join(query_text))
+
 csv_ubt_1 = temp[temp['검사결과내용(최초1) #116'].map(lambda x: find_text(x.lower(), p)) == 1]
 
 #%%
 temp = data_1[data_1['검사결과내용(최초1) #110'].map(lambda x: map_fn(x) != 0)]
+
 query_text = ['result[\s]*:[\s]*negative', 'result[\s]*:[\s]*neagtive',
              'result[\s]*:[\s]*negaitve', 'result[\s]*:[\s]*negatie']
 p = re.compile('|'.join(query_text))
+
 csv_ubt_df_1 = temp[temp['검사결과내용(최초1) #110'].map(lambda x: find_text(x.lower(), p)) == 1]
 # %%
 csv_date['Group_1_DL'] = csv_ubt_1['처방일자(최초1) #113']
@@ -129,6 +135,7 @@ temp = data_3[data_3['검사결과내용(최초1) #104'] != '']
 temp = temp[temp['검사결과내용(최초1) #104'].map(lambda x: map_fn(x)) != 0]
 p = re.compile('CLO.*[(]\s*[+]\s*[)]')
 temp = temp[temp['검사결과내용(최초1) #104'].map(lambda x: find_text(x, p)) == 1]
+
 exclude_index = [9774, 79298, 100266]
 
 expr = 'index not in @exclude_index'
@@ -147,12 +154,14 @@ temp = temp[temp['검사명(최초1) #109'] == 'Urease Breath Test']
 p = re.compile('result[\s]*:[\s]*positive')
 csv_ubt_3_df = temp[temp['검사결과내용(최초1) #110'].map(lambda x: find_text(x.lower(), p)) == 1]
 # %%
-temp = data_3[data_3['검사결과내용(최초1) #110'].map(lambda x: map_fn(x) != 0)]
+temp = data_3.copy()
 
 bert_pred_3 = bert_predict.query('index in @temp.index')
 temp['result'] = bert_pred_3
 data_hp_plus_3 = temp.query('result == 1')
 data_hp_plus_3 = data_hp_plus_3[data_hp_plus_3['검사명(최초1) #109'] != 'Urease Breath Test']
+csv_cz_3 = data_3.query('index in @cz_index_3')
+
 cz_index_3 = list(set(list(data_hp_plus_3.index) + list(csv_ubt_3_df.index)))
 csv_cz_3 = data_3.query('index in @cz_index_3')
 # %%
@@ -162,8 +171,14 @@ csv_date['Group_3_DF'] = csv_cz_3['처방일자(최초1) #107']
 group_3 = list(set(list(csv_ubt_3.index) + list(csv_clo_3.index)+ list(csv_cz_3.index)))
 # %%
 ## Group 4 Not Eradication (-)
-temp = data_3[data_3['검사결과내용(최초1) #110'].map(lambda x: map_fn(x) != 0)]
+temp = data_3[data_3['검사결과내용(최초1) #104'] != '']
+temp = temp[temp['검사결과내용(최초1) #104'].map(lambda x: map_fn(x)) != 0]
+query_text = ['for .* pylori', 'pylori .* was',
+              'pylori .* were', 'for .* HP', 'For .* pylori',
+              'pylori study']
 
+p = re.compile('|'.join(query_text))
+temp = temp[temp['검사결과내용(최초1) #104'].map(lambda x: find_text(x, p)) == 1]
 bert_pred_4 = bert_predict.query('index in @temp.index')
 temp['result'] = bert_pred_4
 temp = temp.query('result == 0')
@@ -174,9 +189,11 @@ temp = data_3.copy()
 temp = temp[temp['검사결과내용(최초1) #104'].map(lambda x: map_fn(x) != 0)]
 p = re.compile('CLO.*[(]\s*[-]\s*[)]')
 csv_clo_4 = temp[temp['검사결과내용(최초1) #104'].map(lambda x: find_text(x, p)) == 1]
+# %%
 cz_index = list(set(list(csv_bx_4.index) + list(csv_clo_4.index)))
 csv_cz_4 = data_3.query('index in @cz_index')
 # %%
+
 temp = data_3[data_3['검사결과내용(최초1) #116'].map(lambda x: map_fn(x) != 0)]
 
 query_text = ['result[\s]*:[\s]*negative', 'result[\s]*:[\s]*neagtive',
